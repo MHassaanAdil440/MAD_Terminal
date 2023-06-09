@@ -5,7 +5,6 @@ import 'firebase/compat/database';
 
 // Initialize Firebase app
 const firebaseConfig = {
-  // Your Firebase config here
   apiKey: "AIzaSyBhfcUdNqfZWO2IdBsqiZ7jx1Y9naaa9co",
   authDomain: "mad-terminal-8154f.firebaseapp.com",
   projectId: "mad-terminal-8154f",
@@ -49,13 +48,6 @@ export default function App() {
     });
   };
 
-  const handleEndReached = () => {
-    if (!isFetching) {
-      setIsFetching(true);
-      fetchCars();
-    }
-  };
-
   const renderItem = ({ item }) => (
     <View style={styles.itemContainer}>
       <Text style={styles.name}>{item.key}</Text>
@@ -75,8 +67,6 @@ export default function App() {
           data={carData}
           renderItem={renderItem}
           keyExtractor={(item) => item.key.toString()}
-          onEndReached={handleEndReached}
-          onEndReachedThreshold={0.5}
           ListFooterComponent={isFetching && <Text style={styles.loadingText}>Loading more...</Text>}
         />
       )}
@@ -106,7 +96,7 @@ const styles = StyleSheet.create({
   itemContainer: {
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
+    borderBottomColor: 'white',
   },
   name: {
     fontSize: 18,
