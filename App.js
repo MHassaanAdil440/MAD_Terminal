@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View, FlatList } from 'react-native';
+import { StyleSheet, Text, View, FlatList, TouchableOpacity, BackHandler } from 'react-native';
+import { NavigationContainer, useNavigation } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
 import firebase from 'firebase/compat/app';
 import 'firebase/compat/database';
 
@@ -17,7 +19,8 @@ const firebaseConfig = {
 const app = firebase.initializeApp(firebaseConfig);
 const database = app.database();
 
-export default function App() {
+const HomeScreen = () => {
+  const navigation = useNavigation();
   const [carData, setCarData] = useState([]);
   const [lastKey, setLastKey] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -25,6 +28,12 @@ export default function App() {
 
   useEffect(() => {
     fetchCars();
+
+    // Add event listener for Back button press
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', handleBackPress);
+
+    // Cleanup the event listener on component unmount
+    return () => backHandler.remove();
   }, []);
 
   const fetchCars = () => {
@@ -48,13 +57,23 @@ export default function App() {
     });
   };
 
+  const handleItemPress = () => {
+    navigation.navigate('Dashboard');
+  };
+
+  const handleBackPress = () => {
+    // Kill the app instead of going back
+    BackHandler.exitApp();
+    return true;
+  };
+
   const renderItem = ({ item }) => (
-    <View style={styles.itemContainer}>
+    <TouchableOpacity style={styles.itemContainer} onPress={handleItemPress}>
       <Text style={styles.name}>{item.key}</Text>
       <Text style={styles.name}>{item.name}</Text>
       <Text style={styles.price}>{item.price}</Text>
       <Text style={styles.speed}>{item.speed} mph</Text>
-    </View>
+    </TouchableOpacity>
   );
 
   return (
@@ -71,6 +90,46 @@ export default function App() {
         />
       )}
     </View>
+  );
+};
+
+const DashboardScreen = () => {
+  const navigation = useNavigation();
+
+  const handleBackPress = () => {
+    // Kill the app instead of going back
+    BackHandler.exitApp();
+    return true;
+  };
+
+  useEffect(() => {
+    // Add event listener for Back button press
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', handleBackPress);
+
+    // Cleanup the event listener on component unmount
+    return () => backHandler.remove();
+  }, []);
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.heading}>Dashboard</Text>
+      <TouchableOpacity style={styles.button} onPress={handleBackPress}>
+        <Text style={styles.buttonText}>Back</Text>
+      </TouchableOpacity>
+    </View>
+  );
+};
+
+const Stack = createStackNavigator();
+
+export default function App() {
+  return (
+    <NavigationContainer>
+      <Stack.Navigator>
+        <Stack.Screen name="Home" component={HomeScreen} />
+        <Stack.Screen name="Dashboard" component={DashboardScreen} />
+      </Stack.Navigator>
+    </NavigationContainer>
   );
 }
 
@@ -110,5 +169,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#888',
     marginTop: 4,
+  },
+  button: {
+    backgroundColor: '#212A3E',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    marginTop: 16,
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
