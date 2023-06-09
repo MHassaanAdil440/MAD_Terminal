@@ -5,6 +5,7 @@ import 'firebase/compat/database';
 
 // Initialize Firebase app
 const firebaseConfig = {
+  // Your Firebase config here
   apiKey: "AIzaSyBhfcUdNqfZWO2IdBsqiZ7jx1Y9naaa9co",
   authDomain: "mad-terminal-8154f.firebaseapp.com",
   projectId: "mad-terminal-8154f",
@@ -19,25 +20,45 @@ const database = app.database();
 
 export default function App() {
   const [carData, setCarData] = useState([]);
+  const [lastKey, setLastKey] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isFetching, setIsFetching] = useState(false);
 
   useEffect(() => {
-    // Fetch car data from Firebase Realtime Database
-    const carsRef = database.ref('cars');
-    carsRef.on('value', (snapshot) => {
+    fetchCars();
+  }, []);
+
+  const fetchCars = () => {
+    setIsLoading(true);
+
+    let query = database.ref('cars').orderByKey();
+    if (lastKey) {
+      query = query.startAfter(String(lastKey));
+    }
+
+    query.limitToFirst(10).once('value', (snapshot) => {
       const data = snapshot.val();
       if (data) {
         const carArray = Object.values(data);
-        setCarData(carArray);
+        const newLastKey = carArray[carArray.length - 1].key;
+        setCarData((prevData) => [...prevData, ...carArray]);
+        setLastKey(newLastKey);
       }
+      setIsLoading(false);
+      setIsFetching(false);
     });
+  };
 
-    return () => {
-      carsRef.off(); // Unsubscribe from Firebase Realtime Database
-    };
-  }, []);
+  const handleEndReached = () => {
+    if (!isFetching) {
+      setIsFetching(true);
+      fetchCars();
+    }
+  };
 
   const renderItem = ({ item }) => (
     <View style={styles.itemContainer}>
+      <Text style={styles.name}>{item.key}</Text>
       <Text style={styles.name}>{item.name}</Text>
       <Text style={styles.price}>{item.price}</Text>
       <Text style={styles.speed}>{item.speed} mph</Text>
@@ -47,12 +68,18 @@ export default function App() {
   return (
     <View style={styles.container}>
       <Text style={styles.heading}>MAD TERMINAL</Text>
-      <FlatList
-        data={carData}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.key.toString()}
-        style={styles.flatList}
-      />
+      {isLoading ? (
+        <Text style={styles.loadingText}>Loading...</Text>
+      ) : (
+        <FlatList
+          data={carData}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.key.toString()}
+          onEndReached={handleEndReached}
+          onEndReachedThreshold={0.5}
+          ListFooterComponent={isFetching && <Text style={styles.loadingText}>Loading more...</Text>}
+        />
+      )}
     </View>
   );
 }
@@ -60,20 +87,21 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F1F6F9', // Set background color
+    backgroundColor: '#F1F6F9',
     alignItems: 'center',
     justifyContent: 'center',
   },
   heading: {
     fontSize: 34,
     fontWeight: 'bold',
-    color: '#212A3E', // Set text color
-    marginTop: 50, // Add margin top
-    marginBottom: 16, // Add margin bottom
+    color: '#212A3E',
+    marginTop: 50,
+    marginBottom: 16,
   },
-  flatList: {
-    backgroundColor: '#white', // Set background color
-    padding: 16, // Add padding
+  loadingText: {
+    fontSize: 16,
+    color: '#888',
+    marginTop: 16,
   },
   itemContainer: {
     padding: 16,
