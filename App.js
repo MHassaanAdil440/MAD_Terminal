@@ -1,14 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, FlatList } from 'react-native';
 import { initializeApp } from 'firebase/app';
-import { getDatabase, ref, push } from 'firebase/database';
+import { getDatabase, ref, push, onValue, off } from 'firebase/database';
 import { Platform } from 'react-native';
 import firebase from 'firebase/compat/app';
 import 'firebase/compat/database';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { NavigationContainer } from '@react-navigation/native';
+
 
 // Initialize Firebase
 const firebaseConfig = {
-  // Add your Firebase config here
   apiKey: "AIzaSyBhfcUdNqfZWO2IdBsqiZ7jx1Y9naaa9co",
   authDomain: "mad-terminal-8154f.firebaseapp.com",
   projectId: "mad-terminal-8154f",
@@ -24,8 +26,9 @@ if (!firebase.apps.length) {
 
 const database = getDatabase();
 
-const App = () => {
+const HomeScreen = () => {
   const [result, setResult] = useState(null);
+  const [cars, setCars] = useState([]);
 
   useEffect(() => {
     // Check the user's OS
@@ -37,12 +40,60 @@ const App = () => {
     push(osRef, {
       name: currentOS,
     });
+
+    // Retrieve data from Firebase Realtime Database
+    const carsRef = ref(database, 'cars');
+    const carsListener = onValue(carsRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const carList = Object.values(data);
+        setCars(carList);
+      }
+    });
+
+    // Clean up the listener when component unmounts
+    return () => {
+      off(carsRef, 'value', carsListener);
+    };
   }, []);
+
+  const renderCarItem = ({ item }) => (
+    <View style={styles.carItem}>
+      <Text style={styles.carName}>{item.name}</Text>
+      <Text>{item.brand}</Text>
+    </View>
+  );
 
   return (
     <View style={styles.container}>
-      <Text style={styles.resultText}>{result ? {result} : 'Failure'}</Text>
+      <Text style={styles.resultText}>{result}</Text>
+      <FlatList
+        data={cars}
+        renderItem={renderCarItem}
+        keyExtractor={(item) => item.id}
+        style={styles.flatList}
+      />
     </View>
+  );
+};
+
+const SettingsScreen = () => (
+  <View style={styles.container}>
+    <Text style={styles.screenText}>Settings Screen</Text>
+  </View>
+);
+
+const Tab = createBottomTabNavigator();
+
+const App = () => {
+  return (
+    <NavigationContainer>
+
+    <Tab.Navigator>
+      <Tab.Screen name="Dashboard" component={HomeScreen} />
+      <Tab.Screen name="Settings" component={SettingsScreen} />
+    </Tab.Navigator>
+    </NavigationContainer>
   );
 };
 
@@ -51,8 +102,26 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    marginTop: 50,
   },
   resultText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  flatList: {
+    marginTop: 20,
+  },
+  carItem: {
+    backgroundColor: '#f9f9f9',
+    padding: 10,
+    marginVertical: 5,
+    borderRadius: 5,
+  },
+  carName: {
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  screenText: {
     fontSize: 24,
     fontWeight: 'bold',
   },
