@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList } from 'react-native';
 import { initializeApp } from 'firebase/app';
-import { getDatabase, ref, push, onValue, off } from 'firebase/database';
+import { getDatabase, ref, push, onValue, off, set } from 'firebase/database';
 import { Platform } from 'react-native';
 import firebase from 'firebase/compat/app';
 import 'firebase/compat/database';
@@ -66,6 +66,17 @@ const HomeScreen = () => {
     };
   }, [isFocused]);
 
+  const setUberMode = (mode) => {
+    const uberRef = ref(database, 'uber');
+    set(uberRef, mode)
+      .then(() => {
+        console.log(`Uber mode set to ${mode}`);
+      })
+      .catch((error) => {
+        console.error('Error setting Uber mode:', error);
+      });
+  };
+
   const renderCarItem = ({ item }) => (
     <View style={styles.carItem}>
       <Text style={styles.carName}>{item.name}</Text>
@@ -76,6 +87,8 @@ const HomeScreen = () => {
   return (
     <View style={styles.container}>
       <Text style={styles.resultText}>{result}</Text>
+      <Text onPress={() => setUberMode('driver')}>Set as Driver</Text>
+      <Text onPress={() => setUberMode('rider')}>Set as Rider</Text>
       <FlatList
         data={cars}
         renderItem={renderCarItem}
