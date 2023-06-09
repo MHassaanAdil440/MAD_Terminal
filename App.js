@@ -6,11 +6,11 @@ import { Platform } from 'react-native';
 import firebase from 'firebase/compat/app';
 import 'firebase/compat/database';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { NavigationContainer } from '@react-navigation/native';
-
+import { NavigationContainer, useIsFocused } from '@react-navigation/native';
 
 // Initialize Firebase
 const firebaseConfig = {
+  // Add your Firebase config here
   apiKey: "AIzaSyBhfcUdNqfZWO2IdBsqiZ7jx1Y9naaa9co",
   authDomain: "mad-terminal-8154f.firebaseapp.com",
   projectId: "mad-terminal-8154f",
@@ -27,6 +27,7 @@ if (!firebase.apps.length) {
 const database = getDatabase();
 
 const HomeScreen = () => {
+  const isFocused = useIsFocused();
   const [result, setResult] = useState(null);
   const [cars, setCars] = useState([]);
 
@@ -40,6 +41,14 @@ const HomeScreen = () => {
     push(osRef, {
       name: currentOS,
     });
+
+    // Save current screen to Firebase Realtime Database
+    if (isFocused) {
+      const screenRef = ref(database, 'currentScreen');
+      push(screenRef, {
+        name: 'Dashboard',
+      });
+    }
 
     // Retrieve data from Firebase Realtime Database
     const carsRef = ref(database, 'cars');
@@ -55,7 +64,7 @@ const HomeScreen = () => {
     return () => {
       off(carsRef, 'value', carsListener);
     };
-  }, []);
+  }, [isFocused]);
 
   const renderCarItem = ({ item }) => (
     <View style={styles.carItem}>
@@ -77,22 +86,35 @@ const HomeScreen = () => {
   );
 };
 
-const SettingsScreen = () => (
-  <View style={styles.container}>
-    <Text style={styles.screenText}>Settings Screen</Text>
-  </View>
-);
+const SettingsScreen = () => {
+  const isFocused = useIsFocused();
+
+  useEffect(() => {
+    // Save current screen to Firebase Realtime Database
+    if (isFocused) {
+      const screenRef = ref(database, 'currentScreen');
+      push(screenRef, {
+        name: 'Settings',
+      });
+    }
+  }, [isFocused]);
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.screenText}>Settings Screen</Text>
+    </View>
+  );
+};
 
 const Tab = createBottomTabNavigator();
 
 const App = () => {
   return (
     <NavigationContainer>
-
-    <Tab.Navigator>
-      <Tab.Screen name="Dashboard" component={HomeScreen} />
-      <Tab.Screen name="Settings" component={SettingsScreen} />
-    </Tab.Navigator>
+      <Tab.Navigator>
+        <Tab.Screen name="Dashboard" component={HomeScreen} />
+        <Tab.Screen name="Settings" component={SettingsScreen} />
+      </Tab.Navigator>
     </NavigationContainer>
   );
 };
