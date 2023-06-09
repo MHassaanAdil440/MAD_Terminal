@@ -1,0 +1,11 @@
+import { initializeApp } from "firebase/app";
+const firebaseConfig = {
+  apiKey: "AIzaSyBhfcUdNqfZWO2IdBsqiZ7jx1Y9naaa9co",
+  authDomain: "mad-terminal-8154f.firebaseapp.com",
+  projectId: "mad-terminal-8154f",
+  storageBucket: "mad-terminal-8154f.appspot.com",
+  messagingSenderId: "126435334074",
+  appId: "1:126435334074:web:53880f2d854889878e2f83",
+  measurementId: "G-CEBGD4635F"
+};
+const analytics = getAnalytics(app);
