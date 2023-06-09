@@ -84,11 +84,14 @@ const HomeScreen = () => {
     </View>
   );
 
+  useEffect(() => {
+    // Set the Uber mode as driver when the component mounts
+    setUberMode('driver');
+  }, []);
+
   return (
     <View style={styles.container}>
       <Text style={styles.resultText}>{result}</Text>
-      <Text onPress={() => setUberMode('driver')}>Set as Driver</Text>
-      <Text onPress={() => setUberMode('rider')}>Set as Rider</Text>
       <FlatList
         data={cars}
         renderItem={renderCarItem}
